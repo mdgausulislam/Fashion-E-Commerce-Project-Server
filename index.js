@@ -32,7 +32,13 @@ async function run() {
         // Connect the client to the server	(optional starting in v4.7)
         await client.connect();
 
-        const usersCollection = client.db('fashionecommerce').collections('users');
+        const usersCollection = client.db('fashionecommerce').collection('users');
+        const reviewsCollection = client.db('fashionecommerce').collection('reviews');
+
+        app.get('/users', async (req, res) => {
+            const result = await usersCollection.find().toArray();
+            res.send(result);
+        })
 
         app.post('/users', async (req, res) => {
             const user = req.body;
@@ -45,10 +51,15 @@ async function run() {
             res.send(result);
         })
 
-        app.post('jwt', (req, res) => {
+        app.post('/jwt', (req, res) => {
             const user = req.body;
             const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' })
             res.send({ token });
+        })
+
+        app.get('/reviews', async (req, res) => {
+            const result = await reviewsCollection.find().toArray();
+            res, send(result);
         })
 
 
