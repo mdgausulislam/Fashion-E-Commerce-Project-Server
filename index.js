@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
+const stripe = require("stripe")(process.env.PAYMENT_SECRET_KEY);
 require('dotenv').config();
 const app = express();
 const port = process.env.PORT || 5000;
@@ -34,6 +35,14 @@ async function run() {
 
         const usersCollection = client.db('fashionecommerce').collection('users');
         const reviewsCollection = client.db('fashionecommerce').collection('reviews');
+        const paymentCollection = client.db('fashionecommerce').collection('payment');
+        const servicesCollection = client.db('fashionecommerce').collection('services');
+
+
+        app.get('/services', async (req, res) => {
+            const result = await servicesCollection.find().toArray();
+            res.send(result);
+        })
 
         app.get('/users', async (req, res) => {
             const result = await usersCollection.find().toArray();
@@ -61,6 +70,23 @@ async function run() {
             const result = await reviewsCollection.find().toArray();
             res.send(result);
         })
+
+        app.post('/create-payment-intent', async (req, res) => {
+            const { amount } = req.body; // Pass the amount from the client-side
+            try {
+                const paymentIntent = await stripe.paymentIntents.create({
+                    amount: amount * 100, // Amount in cents
+                    currency: 'usd', // Change currency as per your requirement
+                });
+                res.json({ clientSecret: paymentIntent.client_secret });
+            } catch (error) {
+                // Handle Stripe API errors properly
+                console.error('Error creating PaymentIntent:', error);
+                res.status(500).json({ error: error.message });
+            }
+        });
+
+
 
 
 
